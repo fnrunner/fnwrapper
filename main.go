@@ -3,10 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
-	"github/fnrunner/fnwrapper/internal/exechandler"
-	"github/fnrunner/fnwrapper/internal/grpcserver"
-	"github/fnrunner/fnwrapper/internal/healthhandler"
-	"github/fnrunner/fnwrapper/pkg/fnwrapper"
+	"github.com/fnrunner/fnwrapper/internal/exechandler"
+	"github.com/fnrunner/fnwrapper/internal/grpcserver"
+	"github.com/fnrunner/fnwrapper/internal/healthhandler"
+	"github.com/fnrunner/fnwrapper/pkg/fnwrapper"
 	"os"
 
 	"github.com/go-logr/logr"

@@ -1,4 +1,4 @@
-module github/fnrunner/fnwrapper
+module github.com/fnrunner/fnwrapper
 
 go 1.19
 

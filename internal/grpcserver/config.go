@@ -14,7 +14,7 @@ limitations under the License.
 package grpcserver
 
 import (
-	"github/fnrunner/fnwrapper/pkg/fnwrapper"
+	"github.com/fnrunner/fnwrapper/pkg/fnwrapper"
 	"strconv"
 	"time"
 )
