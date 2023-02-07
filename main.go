@@ -3,10 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
+	fnrunv1alpha1 "github.com/fnrunner/fnruntime/apis/fnrun/v1alpha1"
 	"github.com/fnrunner/fnwrapper/internal/exechandler"
 	"github.com/fnrunner/fnwrapper/internal/grpcserver"
 	"github.com/fnrunner/fnwrapper/internal/healthhandler"
-	"github.com/fnrunner/fnwrapper/pkg/fnwrapper"
 	"os"
 
 	"github.com/go-logr/logr"
@@ -26,7 +26,7 @@ func main() {
 			return ws.run()
 		},
 	}
-	cmd.Flags().IntVar(&ws.port, "port", fnwrapper.FnGRPCServerPort, "The server port")
+	cmd.Flags().IntVar(&ws.port, "port", fnrunv1alpha1.FnGRPCServerPort, "The server port")
 	if err := cmd.Execute(); err != nil {
 		fmt.Fprintf(os.Stderr, "unexpected error: %v\n", err)
 		os.Exit(1)

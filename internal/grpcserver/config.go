@@ -14,7 +14,7 @@ limitations under the License.
 package grpcserver
 
 import (
-	"github.com/fnrunner/fnwrapper/pkg/fnwrapper"
+	fnrunv1alpha1 "github.com/fnrunner/fnruntime/apis/fnrun/v1alpha1"
 	"strconv"
 	"time"
 )
@@ -53,7 +53,7 @@ type Config struct {
 
 func (c *Config) setDefaults() {
 	if c.Address == "" {
-		c.Address = ":" + strconv.Itoa(fnwrapper.FnGRPCServerPort)
+		c.Address = ":" + strconv.Itoa(fnrunv1alpha1.FnGRPCServerPort)
 	}
 	if c.MaxRPC <= 0 {
 		c.MaxRPC = defaultMaxRPC
