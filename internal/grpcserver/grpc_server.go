@@ -16,7 +16,6 @@ package grpcserver
 import (
 	"context"
 	"net"
-	"sync"
 
 	"github.com/fnrunner/fnproto/pkg/executor/executorpb"
 	"github.com/go-logr/logr"
@@ -24,6 +23,7 @@ import (
 	"golang.org/x/sync/semaphore"
 	"google.golang.org/grpc"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
+	"google.golang.org/grpc/reflection"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
@@ -44,7 +44,7 @@ type GrpcServer struct {
 	watchHandler WatchHandler
 	//
 	// cached certificate
-	cm *sync.Mutex
+	//cm *sync.Mutex
 }
 
 // Health Handlers
@@ -62,7 +62,7 @@ func New(c Config, opts ...Option) *GrpcServer {
 	s := &GrpcServer{
 		config: c,
 		sem:    semaphore.NewWeighted(c.MaxRPC),
-		cm:     &sync.Mutex{},
+		//cm:     &sync.Mutex{},
 	}
 
 	for _, o := range opts {
@@ -72,65 +72,67 @@ func New(c Config, opts ...Option) *GrpcServer {
 	return s
 }
 
-func (s *GrpcServer) Start(ctx context.Context) error {
-	s.l = log.FromContext(ctx)
-	s.l.Info("grpc server start...")
-	s.l.Info("grpc server start",
-		"address", s.config.Address,
-		"certDir", s.config.CertDir,
-		"certName", s.config.CertName,
-		"keyName", s.config.KeyName,
-		"caName", s.config.CaName,
+func (r *GrpcServer) Start(ctx context.Context) error {
+	r.l = log.FromContext(ctx)
+	r.l.Info("grpc server start...")
+	r.l.Info("grpc server start",
+		"address", r.config.Address,
+		"certDir", r.config.CertDir,
+		"certName", r.config.CertName,
+		"keyName", r.config.KeyName,
+		"caName", r.config.CaName,
 	)
-	l, err := net.Listen("tcp", s.config.Address)
+	l, err := net.Listen("tcp", r.config.Address)
 	if err != nil {
 		return errors.Wrap(err, "cannot listen")
 	}
-	opts, err := s.serverOpts(ctx)
+	opts, err := r.serverOpts(ctx)
 	if err != nil {
 		return err
 	}
 	// create a gRPC server object
 	grpcServer := grpc.NewServer(opts...)
 
-	executorpb.RegisterFunctionExecutorServer(grpcServer, s)
-	s.l.Info("grpc server with allocation...")
+	reflection.Register(grpcServer)
 
-	healthpb.RegisterHealthServer(grpcServer, s)
-	s.l.Info("grpc server with health...")
+	executorpb.RegisterFunctionExecutorServer(grpcServer, r)
+	r.l.Info("grpc server with exec function...")
 
-	s.l.Info("starting grpc server...")
+	healthpb.RegisterHealthServer(grpcServer, r)
+	r.l.Info("grpc server with health...")
+
+	r.l.Info("starting grpc server...")
 	err = grpcServer.Serve(l)
 	if err != nil {
-		s.l.Info("gRPC serve failed", "error", err)
+		r.l.Info("gRPC serve failed", "error", err)
 		return err
 	}
 	return nil
 }
 
 func WithCheckHandler(h CheckHandler) func(*GrpcServer) {
-	return func(s *GrpcServer) {
-		s.checkHandler = h
+	return func(r *GrpcServer) {
+		r.checkHandler = h
 	}
 }
 
 func WithWatchHandler(h WatchHandler) func(*GrpcServer) {
-	return func(s *GrpcServer) {
-		s.watchHandler = h
+	return func(r *GrpcServer) {
+		r.watchHandler = h
 	}
 }
 
 func WithExecHandler(h ExecHandler) func(*GrpcServer) {
-	return func(s *GrpcServer) {
-		s.execHandler = h
+	return func(r *GrpcServer) {
+		r.execHandler = h
 	}
 }
 
-func (s *GrpcServer) acquireSem(ctx context.Context) error {
+func (r *GrpcServer) acquireSem(ctx context.Context) error {
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
 	default:
-		return s.sem.Acquire(ctx, 1)
+		return r.sem.Acquire(ctx, 1)
 	}
 }

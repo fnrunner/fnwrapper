@@ -13,6 +13,8 @@ import (
 )
 
 func (r *subServer) ExecuteFuntion(ctx context.Context, req *executorpb.ExecuteFunctionRequest) (*executorpb.ExecuteFunctionResponse, error) {
+	r.l.Info("execute function", "image", req.Image, "rctx", req.ResourceContext)
+
 	var stdout, stderr bytes.Buffer
 	cmd := exec.CommandContext(ctx, r.entrypoint[0], r.entrypoint[1:]...)
 	cmd.Stdin = bytes.NewReader(req.ResourceContext)

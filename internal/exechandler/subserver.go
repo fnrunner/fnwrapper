@@ -18,6 +18,7 @@ import (
 
 	"github.com/fnrunner/fnproto/pkg/executor/executorpb"
 	"github.com/go-logr/logr"
+	ctrl "sigs.k8s.io/controller-runtime"
 )
 
 type SubServer interface {
@@ -25,7 +26,10 @@ type SubServer interface {
 }
 
 func New(entrypoint []string) SubServer {
+	l := ctrl.Log.WithName("subserverExec")
+	l.Info("exec subserver")
 	s := &subServer{
+		l:          l,
 		entrypoint: entrypoint,
 	}
 	return s

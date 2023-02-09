@@ -3,18 +3,23 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
+
 	fnrunv1alpha1 "github.com/fnrunner/fnruntime/apis/fnrun/v1alpha1"
 	"github.com/fnrunner/fnwrapper/internal/exechandler"
 	"github.com/fnrunner/fnwrapper/internal/grpcserver"
 	"github.com/fnrunner/fnwrapper/internal/healthhandler"
-	"os"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	"github.com/go-logr/logr"
 	"github.com/spf13/cobra"
 )
 
 func main() {
-	ws := &wrapperServer{}
+	ws := &wrapperServer{
+		l: ctrl.Log.WithName("fnwrapper"),
+	}
 	cmd := &cobra.Command{
 		Use:   "fnwrapper",
 		Short: "fnwrapper is a grpc server that frontends a fn that operates on KRM",
@@ -23,6 +28,9 @@ func main() {
 			if argsLenAtDash > -1 {
 				ws.entrypoint = args[argsLenAtDash:]
 			}
+
+			ctrl.SetLogger(zap.New())
+			ws.l = ctrl.Log.WithName("fnwrapper")
 			return ws.run()
 		},
 	}
@@ -40,9 +48,12 @@ type wrapperServer struct {
 }
 
 func (r *wrapperServer) run() error {
+	r.l.Info("start fnwrapper")
 	wh := healthhandler.New()
 	eh := exechandler.New(r.entrypoint)
+
 	s := grpcserver.New(grpcserver.Config{
+		Address:  fmt.Sprintf(":%d", r.port),
 		Insecure: true,
 	},
 		grpcserver.WithWatchHandler(wh.Watch),
